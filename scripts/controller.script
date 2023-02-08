@@ -1,19 +1,30 @@
 function init(self)
+	-- Stores the message_id that will be recieved when a new collection is to be loaded
 	self.load_collection = hash('load_collection')
-	self.title = hash('title')
+
+	-- Load the collection 'title'
 	load_collection('#title_proxy')
+
+	-- Acquires Input Focus
 	msg.post('.', 'acquire_input_focus')
 end
 
 function on_message(self, message_id, message, sender)
+	-- Checks to see if new collection is to be loaded...
 	if message_id == self.load_collection then
+		-- If so, unload current collection...
 		unload_collection(self.current_collection)
+		-- And load new collection
 		load_collection(message.collection_to_load)
 	end
+	
+	-- Checks to see if the collection was successfully loaded
 	if message_id == hash('proxy_loaded') then
+		-- Enables the collection that sent the message
 		enable_collection(sender)
+		
+		-- Updates self.current_collection to the new collection that is loaded 
 		self.current_collection = sender
-		print(self.current_collection)
 	end
 end
 
