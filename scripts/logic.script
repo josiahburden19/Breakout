@@ -1,0 +1,63 @@
+function init(self)
+	-- Initializes self.screen_centre with coordinates 0,0,0
+	self.screen_centre = vmath.vector3()
+	-- Sets the x and y component of the self.screen_centre to half the screen width and height
+	self.screen_centre.x = sys.get_config_int("display.width")/2
+	self.screen_centre.y = sys.get_config_int("display.height")/2
+
+	-- Initializes self.screen_size with coordinates 0,0,0
+	self.screen_size = vmath.vector3()
+	-- Sets the x and y component of the self.screen_centre to the screen width and height
+	self.screen_size.x = sys.get_config_int("display.width")
+	self.screen_size.y = sys.get_config_int("display.height")
+	
+	-- Gets the size of the wall sprite and stores it in a 3d vector
+	self.tile_size = resource.get_atlas("/main/graphics.a.texturesetc").animations[1].width
+
+	-- Calculates the position for the ball to spawn at
+	self.ball_start_pos = vmath.vector3(self.screen_centre.x, 50, 0.95)
+	
+	-- Pre hash self.play_random_sound
+	self.play_random_sound = hash('play_random_sound')
+	
+	local test_json_file = sys.load_resource('/maps/map.tmj')
+	local test_map = json.decode(test_json_file)
+	pprint(test_map.layers[1].height)
+
+	-- self.offset stores how many blocks high the map is
+	self.offset = test_map.layers[1].height
+
+	-- Calculates how many walls can 
+	self.array_size = vmath.vector3(self.screen_size.x/self.tile_size, self.offset, 0)
+	
+	-- Loops through the array spawning the wall if the map at that position has a value of 1
+	for y=0, self.array_size.y, 1 do
+		for x=0, self.array_size.x, 1 do
+			-- If map has value of 1 then spawn wall
+			if test_map.layers[1].data[y*self.array_size.x + x] == 1 then
+				-- Spawn wall at appropiate position
+				factory.create('#wall_factory', array_coord_to_display_coord(vmath.vector3(x, y, 0), self.tile_size, self.screen_size.y))
+			end
+		end
+	end
+	-- Spawns the ball
+	factory.create('/logic#ball_factory', self.ball_start_pos)
+	
+end
+
+function array_coord_to_display_coord(input_vector, tile_size, screen_height)
+	-- Creates an empty vector called output_vector
+	local output_vector = vmath.vector3()
+	-- Calculates the position where the x value should be displayed
+	output_vector.x = (input_vector.x * tile_size) - tile_size/2
+	-- Calculates the position where the y value should be displayed taking into account offset from y axis
+	output_vector.y = screen_height - (input_vector.y * tile_size) + tile_size/2
+	return output_vector
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == self.play_random_sound then
+		sound.play('/sounds#sound' .. rnd.range(1, 11))
+	end
+end
+	

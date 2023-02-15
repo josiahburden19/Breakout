@@ -13,4 +13,26 @@ input_method = HiddenInputField
 
 [project]
 title = Brick Breaker
+custom_resources = /maps/
+dependencies#0 = https://github.com/selimanac/defold-random/archive/master.zip
+
+[factory]
+max_count = 128
+
+[sprite]
+max_count = 4096
+
+[collection]
+max_instances = 4096
+
+[physics]
+max_collision_object_count = 4096
+scale = 0.01
+gravity_y = -1000.0
+
+[graphics]
+max_draw_calls = 2048
+
+[library]
+include_dirs = 
 

@@ -1,22 +1,22 @@
 function init(self)
 	-- Initializes self.screen_centre with coordinates 0,0,0
 	self.screen_centre = vmath.vector3()
-	-- Sets the x and y component of the self.screen_centre to the screen width and height respectively
-	self.screen_centre.x, self.screen_centre.y = window.get_size()
-	-- Halfs self.screen_centre to find the centre of the screen
-	self.screen_centre = self.screen_centre/2
-
+	-- Sets the x and y component of the self.screen_centre to half the screen width and height
+	self.screen_centre.x = sys.get_config_int("display.width")/2
+	self.screen_centre.y = sys.get_config_int("display.height")/2
 	
 	-- Stores the node ids and the proxy of the collection to load when clcicked
 	self.click_nodes = {{'play', '#game_proxy'}, {'options', '#settings_proxy'}}
 	-- Lets the update script know whether the node at the same index in self.click_nodes is being animated
 	self.animating_nodes = {}
 
-	-- Converts the ids in self.click_nodes to nodes
 	for index, id_data in ipairs(self.click_nodes) do
 		-- For ever id in self.click_nodes create a false value in self.animating 
 		self.animating_nodes[index] = false
+		-- Converts the ids in self.click_nodes to nodes
 		self.click_nodes[index][1] = gui.get_node(id_data[1])
+		-- Adds the original scale to the click nodes data so nodes can be different sizes
+		self.click_nodes[index][3] = gui.get_scale(self.click_nodes[index][1])
 	end
 
 	-- Gets the node with the id 'container' and stores it in a variable, self.container_node
@@ -32,23 +32,30 @@ function init(self)
 
 	-- Stores the message_id that will be sent when a node is clicked
 	self.load_collection = hash('load_collection')
+
+	-- Pre hashes touch
+	self.touch = hash('touch')
 	
 	-- Acquires Input Focus
 	msg.post('.', 'acquire_input_focus')
 end
 
 function update(self, dt)
+	-- node_data[1] is the current node
+	-- node_data[2] is the collection to be loaded when clicked
+	-- node_data[3] is the original scale that the node was initialized at
+
 	-- Loops through all clickable nodes
 	for index, node_data in ipairs(self.click_nodes) do
 		-- Checks to see if node is clickable and the current node is not being animated
 		if gui.pick_node(node_data[1], self.mouse_pos.x, self.mouse_pos.y) and not self.animating_nodes[index] then
 			self.animating_nodes[index] = true
-			gui.animate(node_data[1], 'scale', vmath.vector3(1.2, 1.2, 1), go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
+			gui.animate(node_data[1], 'scale', node_data[3]*1.2, go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
 
 		-- If the mouse is not over the node and the current node is not being animated then animate to original scale
 		elseif not self.animating_nodes[index] then
 			self.animating_nodes[index] = true
-			gui.animate(node_data[1], 'scale', vmath.vector3(1, 1, 1), go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
+			gui.animate(node_data[1], 'scale', node_data[3], go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
 		end
 
 		-- Checks to see if node is clicked
@@ -62,5 +69,7 @@ function on_input(self, action_id, action)
 	-- Updates the self.mouse_pos variable with the current coordinates of the mouse
 	self.mouse_pos = vmath.vector3(action.x, action.y, 0)
 	-- Updates the self.pressed variable according to action.pressed
-	self.pressed = action.pressed
+	if action_id == self.touch then
+		self.pressed = action.pressed
+	end
 end

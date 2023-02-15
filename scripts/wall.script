@@ -1,0 +1,58 @@
+function init(self)
+	-- Disables collision object 'after_hit'
+	msg.post('#after_hit', 'disable')
+	-- Pre-hashes 'contact_point_response'
+	contact_point_response = hash('contact_point_response')
+	-- Creates property 'tint'
+	go.property('tint', vmath.vector4(1, 1, 1, 1))
+end
+
+function update(self, dt)
+	-- If wall falls below 20 on the y axis object will be deleted
+	if go.get_position().y < 20 then
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == contact_point_response then
+		-- Disables old collision object (static)
+		msg.post('#before_hit', 'disable')
+		-- Enables new collision object (dynamic)
+		msg.post('#after_hit', 'enable')
+		-- Sets value from 0.9 to 1 because it is falling over the other walls
+		go.set('.', 'position.z', 0.91)
+		-- Applies a random force
+		apply_random_force()
+		-- Plays random sound
+		play_random_breaking_sound()
+	end
+end
+
+function apply_random_force()
+	-- Calculates a force which acts upwards and either left or right
+	local force = vmath.vector3(rand_num(-20, 20, 1000), rand_num(0, 20, 1000), 0)
+	-- Calculates the position the force should act small vector3 is added to position to make the force rotate the wall
+	local position = go.get_world_position() + vmath.vector3(rand_num(-20, 20, .1), rand_num(-20, 20, .1), 0)
+	-- Sends a message to the collision object to apply the force at the given position
+	msg.post("#after_hit", "apply_force", 
+	{
+		force = force,
+		position = position
+	})
+end
+
+function play_random_breaking_sound()
+	-- Sends a message to '/logic' to play a random breaking sound
+	msg.post('/logic', 'play_random_sound')
+end
+
+function rand_num(min, max, mlt)
+	-- Adjusts the range of numbers e.g. min = -10 and max = 20 will adjust the range to 0 - 30 beacause rnd.range only takes positive numbers
+	-- Number is then multiplied by a value
+	return (rnd.range(0, max - min) + min) * mlt
+end
+
+
+
+	

@@ -1,0 +1,65 @@
+function init(self)
+	-- Creates a property 'speed' which is the length of the vector that will be added to the current position
+	go.property('speed', 300)
+	-- Rotates the vector with length 'speed' between 10 and 170 degrees when ball
+	self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(20, 160))), vmath.vector3(self.speed, 0, 0))
+	
+	-- Pre-hashes 'contact_point_response'
+	contact_point_response = hash('contact_point_response')
+end
+
+function update(self, dt)
+	-- Updates position based on dt and self.direction
+	go.set_position(go.get_position() + self.direction * dt)
+	if go.get_position().y < 20 then
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	-- Checks to see if collided with wall or ball
+	if message_id == contact_point_response then
+		-- If going in a opposing direction to collision normal
+		if vmath.dot(self.direction, message.normal) < 0 and message.group ~= hash('bricks') then
+			-- Reflects the direction vector
+			if message.other_id == hash('/paddle') then
+				-- Tells the function that is was hit by paddle
+				self.direction = reflect_vector3(self.direction, message.normal, true)
+			else
+				-- Tells the function that is wasn't hit by paddle
+				self.direction = reflect_vector3(self.direction, message.normal, false)
+			end
+		end
+	end
+end
+
+function increase_speed(vector3, speed)
+	vector3 = vector3 * speed
+	return vector3
+end
+
+function reflect_vector3(vector3, normal, is_paddle)
+	-- Uses equation to exactly reflect direction given the normal
+	-- R = V - 2(V . N)N
+
+	-- If hits it hits the paddle then reflection will be skewed depending on the how far from the centre of the paddle it was hit.
+	if is_paddle and normal == vmath.vector3(0, 1, 0) then
+		-- Calculates exact reflection
+		local reflect_vector = vector3 - 2*(vmath.dot(vector3, normal)) * normal
+		-- Gets relative position of paddle to ball
+		local relative_position = go.get_position().x - go.get_position('/paddle').x
+		-- Rotates the reflected vector based on where it is hit on the paddle and returns it
+		return vmath.rotate(vmath.quat_rotation_z(math.rad(-relative_position) * 2), reflect_vector)
+	else
+		-- Calculates exact reflection
+		local reflect_vector = vector3 - 2*(vmath.dot(vector3, normal)) * normal
+		-- Returns reflected vector
+		return reflect_vector
+	end
+end
+
+function rng(min, max)
+	-- Adjusts the range of numbers e.g. min = -10 and max = 20 will adjust the range to 0 - 30 beacause rnd.range only takes positive numbers
+	return rnd.range(0, max - min) + min
+end
+	

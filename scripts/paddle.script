@@ -1,0 +1,23 @@
+function init(self)
+	-- Intializes the start position on the y axis
+	go.property('y_start_pos', 30)
+	-- Intializes the speed for the paddle
+	go.property('paddle_speed', 6)
+	
+	-- Assigns an empty vector to self.start_pos to store the start position
+	self.start_pos = vmath.vector3()
+	-- Sets the x component of self.start_pos to half the screen width
+	self.start_pos.x = sys.get_config_int("display.width")/2
+	-- Sets the y component of self.start_pos to the property y_start_pos
+	self.start_pos.y = self.y_start_pos
+	-- Sets game object to the start position
+	go.set_position(self.start_pos)
+		
+	msg.post('.', 'acquire_input_focus')
+end
+
+function on_input(self, action_id, action)
+	if action_id == nil then
+		go.set('.', 'position.x', action.x)
+	end
+end
