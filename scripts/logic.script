@@ -10,39 +10,83 @@ function init(self)
 	-- Sets the x and y component of the self.screen_centre to the screen width and height
 	self.screen_size.x = sys.get_config_int("display.width")
 	self.screen_size.y = sys.get_config_int("display.height")
-	
-	-- Gets the size of the wall sprite and stores it in a 3d vector
-	self.tile_size = resource.get_atlas("/main/graphics.a.texturesetc").animations[1].width
 
+	-- 'Note: multiple ids are required for the bricks since they have different levels of health'
+	self.bricks_id = {1, 3, 4}
+	-- Id of the random wall
+	self.random_id = 2
+	
+	-- Goes through all the sprites and finds the image with id 'wall 1' then uses that value as self.tile_size
+	for i,v in ipairs(resource.get_atlas("/main/graphics.a.texturesetc").animations) do
+		if v.id == 'wall 1' then
+			self.tile_size = v.width 
+		end
+	end
+	
 	-- Calculates the position for the ball to spawn at
 	self.ball_start_pos = vmath.vector3(self.screen_centre.x, 50, 0.95)
 	
-	-- Pre hash self.play_random_sound
-	self.play_random_sound = hash('play_random_sound')
-	
-	local test_json_file = sys.load_resource('/maps/map.tmj')
-	local test_map = json.decode(test_json_file)
-	pprint(test_map.layers[1].height)
+	local json_map = sys.load_resource('/maps/map.tmj')
+	local map = json.decode(json_map)
 
 	-- self.offset stores how many blocks high the map is
-	self.offset = test_map.layers[1].height
+	self.offset = map.layers[1].height
 
 	-- Calculates how many walls can 
 	self.array_size = vmath.vector3(self.screen_size.x/self.tile_size, self.offset, 0)
 	
 	-- Loops through the array spawning the wall if the map at that position has a value of 1
-	for y=0, self.array_size.y, 1 do
+	for y=0, self.array_size.y - 1, 1 do
 		for x=0, self.array_size.x, 1 do
-			-- If map has value of 1 then spawn wall
-			if test_map.layers[1].data[y*self.array_size.x + x] == 1 then
-				-- Spawn wall at appropiate position
-				factory.create('#wall_factory', array_coord_to_display_coord(vmath.vector3(x, y, 0), self.tile_size, self.screen_size.y))
+			-- Gets the value of the current tile and assigns it to a var
+			local current_tile = map.layers[1].data[y*self.array_size.x + x]
+			-- Checks to see if current tile is a brick
+			local is_brick = find_value(self.bricks_id, current_tile)
+			if is_brick[1] then
+				-- Calls spawn spawn_wall gives x, y and type of wall, how damaged the tile is, self.tile_size and self.screen_size.y
+				spawn_wall(x, y, 1, is_brick[2], self.tile_size, self.screen_size.y)
+			elseif current_tile == self.random_id then
+				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y
+				spawn_wall(x, y, 2, nil, self.tile_size, self.screen_size.y)
 			end
 		end
 	end
-	-- Spawns the ball
-	factory.create('/logic#ball_factory', self.ball_start_pos)
+	-- Pre-hashes the message_id 'play_random_sound'
+	self.play_random_sound = hash('play_random_sound')
+	-- Pre hashes the message_id 'ball_deleted'
+	self.ball_deleted = hash('ball_deleted')
+	-- Pre-hashes the message_id 'check_ball_exists'
+	self.check_ball_exists = hash('check_ball_exists')
+	-- Pre-hashes the message_id 'spawn_ball'
+	self.spawn_ball = hash('spawn_ball')
 	
+	-- Ball id table
+	self.ball_ids = {}
+	-- Spawns the ball
+	table.insert(self.ball_ids, factory.create('/logic#ball_factory', self.ball_start_pos))
+end
+
+function find_value(tab, val)
+	-- Goes through every value in table
+	for index, value in ipairs(tab) do
+		-- If value is found then index is returned
+		if value == val then
+			return {true, index}
+		end
+	end
+	-- If no value found return false
+	return {false}
+end
+
+function spawn_wall(x,y, type, damage, tile_size, screen_height)
+	if type == 1 and damage then
+		factory.create('#wall_factory',
+		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height),
+		nil, {health = 4 - damage})
+	elseif type == 2 then
+		factory.create('#wall_random_factory',
+		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height))
+	end
 end
 
 function array_coord_to_display_coord(input_vector, tile_size, screen_height)
@@ -51,13 +95,32 @@ function array_coord_to_display_coord(input_vector, tile_size, screen_height)
 	-- Calculates the position where the x value should be displayed
 	output_vector.x = (input_vector.x * tile_size) - tile_size/2
 	-- Calculates the position where the y value should be displayed taking into account offset from y axis
-	output_vector.y = screen_height - (input_vector.y * tile_size) + tile_size/2
+	output_vector.y = screen_height - (input_vector.y * tile_size) - tile_size/2
 	return output_vector
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == self.play_random_sound then
+		-- Plays a random sound between #sound1 and #sound11
 		sound.play('/sounds#sound' .. rnd.range(1, 11))
+	end
+	if message_id == self.ball_deleted then
+		-- Finds the index of the ball that has gone off the screen in self.ball_ids
+		local index = find_value(self.ball_ids, message.ball_id)[2]
+		-- Removes the ball id from the table of balls in play
+		table.remove(self.ball_ids, index)
+	end
+	if message_id == self.check_ball_exists then
+		-- Calls find value which returns {true, index} if found and {false} if the value is not found in the table of ball ids hence why [1] is used
+		local did_ball_exist = find_value(self.ball_ids, message.ball_id)[1]
+		-- Sends a message back to the sender telling them whether the ball exists or not
+		msg.post(sender, 'checked_ball_exists', {did_ball_exist = did_ball_exist})
+	end
+	if message_id == self.spawn_ball then
+		local ball_id = factory.create('/logic#ball_factory', message.position, nil, {initial_direction = message.initial_direction})
+		table.insert(self.ball_ids, ball_id)
+		print('Ball added')
+		pprint(self.ball_ids)
 	end
 end
 	

@@ -1,14 +1,87 @@
 images {
-  image: "/graphics/wall/wall-assets/wall.png"
-  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-}
-images {
   image: "/graphics/paddle/paddle-assets/paddle.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
   image: "/graphics/ball/ball-assets/ball.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+animations {
+  id: "wall 1"
+  images {
+    image: "/graphics/wall/wall-assets/wall.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "wall 2"
+  images {
+    image: "/graphics/wall/wall-assets/wall2.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "wall 3"
+  images {
+    image: "/graphics/wall/wall-assets/wall3.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "wall random"
+  images {
+    image: "/graphics/wall/wall-assets/wall_random.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "two_balls"
+  images {
+    image: "/graphics/wall_random/wall_random-assets/two_balls.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "paddle_extension"
+  images {
+    image: "/graphics/wall_random/wall_random-assets/paddle_extension.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "slow_time"
+  images {
+    image: "/graphics/wall_random/wall_random-assets/slow_time.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
 }
 margin: 0
 extrude_borders: 2

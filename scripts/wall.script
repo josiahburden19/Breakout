@@ -2,30 +2,57 @@ function init(self)
 	-- Disables collision object 'after_hit'
 	msg.post('#after_hit', 'disable')
 	-- Pre-hashes 'contact_point_response'
-	contact_point_response = hash('contact_point_response')
-	-- Creates property 'tint'
-	go.property('tint', vmath.vector4(1, 1, 1, 1))
+	self.collision_response = hash('collision_response')
+	
+	-- Creates property 'health'
+	go.property('health', 3)
+
+	sprite.play_flipbook('#sprite', 'wall ' .. (4 - self.health))
+
+	-- Pre hash collision groups
+	self.ball = hash('ball')
+
+	if self.health == 1 then
+		physics.set_group('#before_hit', 'wall_health_1')
+	end
 end
 
 function update(self, dt)
 	-- If wall falls below 20 on the y axis object will be deleted
-	if go.get_position().y < 20 then
+	if go.get_position().y < -20 then
 		go.delete()
 	end
+	
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == contact_point_response then
-		-- Disables old collision object (static)
-		msg.post('#before_hit', 'disable')
-		-- Enables new collision object (dynamic)
-		msg.post('#after_hit', 'enable')
-		-- Sets value from 0.9 to 1 because it is falling over the other walls
-		go.set('.', 'position.z', 0.91)
-		-- Applies a random force
-		apply_random_force()
-		-- Plays random sound
-		play_random_breaking_sound()
+	if message_id == self.collision_response then
+		if message.group == self.ball and self.health == 1 then
+			-- Disables old collision object (static)
+			msg.post('#before_hit', 'disable')
+
+			-- Enables new collision object (dynamic)
+			msg.post('#after_hit', 'enable')
+			
+			-- Sets value from 0.9 to 1 because it is falling over the other walls
+			go.set('.', 'position.z', 0.91)
+
+			
+			-- Applies a random force
+			apply_random_force()
+			-- Plays random sound
+			play_random_breaking_sound()
+		elseif message.group == self.ball then
+			-- Lowers health by 1
+			self.health = self.health - 1
+			play_random_breaking_sound()
+			-- Updates the sprite to the correct image which shows damage
+			-- (4 - self.health) is used beacuse the strongest wall has a value of 1 and self.health starts at 3 so 4-3 = 1
+			sprite.play_flipbook('#sprite', 'wall ' .. (4 - self.health))
+			if self.health == 1 then
+				physics.set_group('#before_hit', 'wall_health_1')
+			end
+		end
 	end
 end
 

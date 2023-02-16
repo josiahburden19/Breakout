@@ -1,35 +1,56 @@
 function init(self)
 	-- Creates a property 'speed' which is the length of the vector that will be added to the current position
 	go.property('speed', 300)
+
+	go.property('initial_direction', vmath.vector3())
 	-- Rotates the vector with length 'speed' between 10 and 170 degrees when ball
-	self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(20, 160))), vmath.vector3(self.speed, 0, 0))
-	
+	if self.initial_direction == vmath.vector3() then
+		self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(20, 160))), vmath.vector3(self.speed, 0, 0))
+	else
+		local angle = math.deg(math.atan2(self.initial_direction.y, self.initial_direction.x))
+		self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(angle - 20, angle + 20))), vmath.vector3(self.speed, 0, 0))
+	end
 	-- Pre-hashes 'contact_point_response'
-	contact_point_response = hash('contact_point_response')
+	self.contact_point_response = hash('contact_point_response')
+
+	-- Pre-hashes collision group 'paddle'
+	self.paddle = hash('paddle')
+	-- Pre-hashes collision group 'wall_health_1'
+	self.wall_health_1 = hash('wall_health_1')
+
+	-- Pre-hashes message_id 'angle'
+	self.angle = hash('angle')
 end
 
 function update(self, dt)
 	-- Updates position based on dt and self.direction
 	go.set_position(go.get_position() + self.direction * dt)
-	if go.get_position().y < 20 then
+	
+	if go.get_position().y < -20 then
+		-- Tells the logic script that the ball has been deleted so it can be removed from the ball_ids table
+		msg.post('/logic', 'ball_deleted', {ball_id = go.get_id()})
+		-- Deletes the ball since it is off the screen beacuse it y coord is less than 20
 		go.delete()
 	end
 end
 
 function on_message(self, message_id, message, sender)
 	-- Checks to see if collided with wall or ball
-	if message_id == contact_point_response then
+	if message_id == self.contact_point_response then
 		-- If going in a opposing direction to collision normal
-		if vmath.dot(self.direction, message.normal) < 0 and message.group ~= hash('bricks') then
+		if vmath.dot(self.direction, message.normal) < 0 then
 			-- Reflects the direction vector
-			if message.other_id == hash('/paddle') then
+			if message.group == self.paddle then
 				-- Tells the function that is was hit by paddle
 				self.direction = reflect_vector3(self.direction, message.normal, true)
-			else
+			elseif message.group ~= self.wall_health_1 then
 				-- Tells the function that is wasn't hit by paddle
 				self.direction = reflect_vector3(self.direction, message.normal, false)
 			end
 		end
+	end
+	if message_id == self.angle then
+		msg.post(sender, 'direction', {direction = self.direction})
 	end
 end
 
@@ -45,7 +66,7 @@ function reflect_vector3(vector3, normal, is_paddle)
 	-- If hits it hits the paddle then reflection will be skewed depending on the how far from the centre of the paddle it was hit.
 	if is_paddle and normal == vmath.vector3(0, 1, 0) then
 		-- Calculates exact reflection
-		local reflect_vector = vector3 - 2*(vmath.dot(vector3, normal)) * normal
+		local reflect_vector = normal * vmath.length(vector3)
 		-- Gets relative position of paddle to ball
 		local relative_position = go.get_position().x - go.get_position('/paddle').x
 		-- Rotates the reflected vector based on where it is hit on the paddle and returns it

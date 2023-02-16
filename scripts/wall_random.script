@@ -1,0 +1,76 @@
+function init(self)
+	-- Disables collision object 'after_hit'
+	msg.post('#after_hit', 'disable')
+	
+	-- Pre-hashes 'contact_point_response'
+	self.collision_response = hash('collision_response')
+	-- Pre-hashes 'trigger_response'
+	self.trigger_response =  hash('trigger_response')
+
+	-- Pre hash collision groups
+	self.ball = hash('ball')
+	self.paddle = hash('paddle')
+
+	-- Pre-hash message_id 'checked_ball_exists'
+	self.checked_ball_exists = hash('checked_ball_exists')
+	-- Pre-hash message_id 'direction'
+	self.direction = hash('direction')
+	
+	-- Flag to store datab
+	self.hit = false
+	-- Flag to store if ball has been stored
+	self.spawned = false
+
+	self.sprite_powerups = {'two_balls', 'paddle_extension', 'slow_time'}
+end
+
+function update(self, dt)
+	-- If hit then move the wall downwards
+	if self.hit then
+		go.set('.', 'position.y', go.get_position().y - 100 * dt)
+	end
+	if go.get_position().y < -20 then
+		go.delete()
+	end 
+end
+
+function on_message(self, message_id, message, sender)
+	-- If collided with ball
+	if self.collision_response and message.group == self.ball then
+		-- Disable collision object
+		msg.post('#before_hit', 'disable')
+
+		-- Enable the collision object for after its hit
+		msg.post('#after_hit', 'enable')
+		
+		-- Set position on z axis so its rendered infront of other walls
+		go.set('.', 'position.z', 0.92)
+
+		-- Stores the id of the ball so the new ball can be spawed at that position
+		self.ball_id = message.other_id
+		
+		-- Set flag self.hit to true
+		self.hit = true
+
+		self.power_up = rnd.range(1, 3)
+
+		sprite.play_flipbook('#sprite', self.sprite_powerups[self.power_up])
+		
+	elseif self.hit and not self.spawned and self.trigger_response then
+		-- ..and self.hit is true then delete
+		self.spawned = true
+		print('HIT')
+		-- Sends a message to logic which contains the table of the balls that are currently in play to check whether that id of the ball that hit has gone off the screen
+		msg.post('/logic', 'check_ball_exists', {ball_id = self.ball_id})
+	end
+	if message_id == self.checked_ball_exists then
+		if message.did_ball_exist then
+			msg.post(self.ball_id, 'angle')
+		end
+	end
+	if message_id == self.direction then
+		msg.post('/logic', 'spawn_ball', {position = go.get_position(self.ball_id), initial_direction = message.direction})
+		go.delete()
+	end
+end
+		

@@ -1,26 +1,6 @@
 components {
-  id: "wall"
-  component: "/scripts/wall.script"
-  position {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-  }
-  rotation {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    w: 1.0
-  }
-}
-embedded_components {
-  id: "sprite"
-  type: "sprite"
-  data: "tile_set: \"/main/graphics.atlas\"\n"
-  "default_animation: \"wall 1\"\n"
-  "material: \"/builtins/materials/sprite.material\"\n"
-  "blend_mode: BLEND_MODE_ALPHA\n"
-  ""
+  id: "wall_random"
+  component: "/scripts/wall_random.script"
   position {
     x: 0.0
     y: 0.0
@@ -82,14 +62,34 @@ embedded_components {
   }
 }
 embedded_components {
+  id: "sprite"
+  type: "sprite"
+  data: "tile_set: \"/main/graphics.atlas\"\n"
+  "default_animation: \"wall random\"\n"
+  "material: \"/builtins/materials/sprite.material\"\n"
+  "blend_mode: BLEND_MODE_ALPHA\n"
+  ""
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+}
+embedded_components {
   id: "after_hit"
   type: "collisionobject"
   data: "collision_shape: \"\"\n"
-  "type: COLLISION_OBJECT_TYPE_DYNAMIC\n"
-  "mass: 1.0\n"
+  "type: COLLISION_OBJECT_TYPE_TRIGGER\n"
+  "mass: 0.0\n"
   "friction: 0.1\n"
   "restitution: 0.5\n"
-  "group: \"wall\"\n"
+  "group: \"wall_random\"\n"
   "mask: \"paddle\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"
