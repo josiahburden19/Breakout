@@ -6,6 +6,14 @@ images {
   image: "/graphics/ball/ball-assets/ball.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
+images {
+  image: "/graphics/slider/slider-assets/slider.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/graphics/slider/slider-assets/slider_point.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
 animations {
   id: "wall 1"
   images {
@@ -76,6 +84,17 @@ animations {
   id: "slow_time"
   images {
     image: "/graphics/wall_random/wall_random-assets/slow_time.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "unbreakable_wall"
+  images {
+    image: "/graphics/unbreakable_wall/unbreakable_wall-assets/unbreakable_wall.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   playback: PLAYBACK_NONE

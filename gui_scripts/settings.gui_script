@@ -1,0 +1,88 @@
+function init(self)
+	-- Location for config to be saved and loaded from
+	self.file_location = 'config/config'
+
+	-- Stores a list of all the ids of the slider points and what config key value they change
+	self.slider_point_info = {{id = 'volume_slider_point', key = 'volume'}}
+	-- Turn all the slider ids to their nodes
+	self.slider_point_info = convert_ids_nodes(self.slider_point_info)
+
+	-- Checks if files exists so it can be loaded else it is created with default values
+	if file_exists(self.file_location) then
+		self.config = sys.load(self.file_location)
+	else
+		local default_config = {
+			volume = 100,
+			bricks_sfx = true,
+			power_up_sfx = true
+		}
+		sys.save(self.file_location, default_config)
+	end
+
+	msg.post('.', 'acquire_input_focus')
+end
+
+function save(new_config, location)
+	-- Saves the config at the given location
+	sys.save(location, new_config)
+end
+
+function convert_ids_nodes(list_ids)
+	-- Iterates through all the id's and gets the node
+	for index, id in ipairs(list_ids) do
+		list_ids[index].node = gui.get_node(list_ids[index].id)
+	end
+	return list_ids
+end
+
+function slider_x_coord_to_value(x_coord_of_point)
+	-- Given how far along a slider point is, a percentage of how much is complete will be returned
+	return math.floor((x_coord_of_point + 185)/3.7 + 0.5)
+end
+
+function file_exists(name)
+	-- Checks if the file exists by opening it and checks to see if it is equal to nil
+	local file=io.open(name,"r")
+	if file~=nil then
+		io.close(file)
+		return true
+	else
+		return false
+	end
+end
+
+function slider_points_input(slider_point_info, x, y, id, pressed)
+	for index, data in ipairs(slider_point_info) do
+		if gui.pick_node(data.node, x, y) and id == hash('touch') and pressed then
+			return index
+		end
+	end
+	return nil
+end
+
+function on_input(self, action_id, action)
+	local index_of_node = slider_points_input(self.slider_point_info, action.x, action.y, action_id, action.pressed)
+
+	if index_of_node ~= nil then
+		self.current_node_data = self.slider_point_info[index_of_node]
+	end
+	if self.current_node_data ~= nil and action.dx ~= 0 then
+		local x_pos = clamp(action.x - 480, -185, 185)
+		local y_pos = gui.get_position(self.current_node_data.node).y
+		gui.set_position(self.current_node_data.node, vmath.vector3(x_pos, y_pos, 0))
+		self.config[self.current_node_data.key] = slider_x_coord_to_value(x_pos)
+		pprint(self.config)
+		if action.released then
+			self.current_node_data = nil
+		end
+	end
+end
+
+function clamp(value, min, max)
+	if value > max then
+		return max
+	elseif value < min then
+		return min
+	end
+	return value
+end

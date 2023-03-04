@@ -18,8 +18,8 @@ function init(self)
 end
 
 function update(self, dt)
-	-- If wall falls below 20 on the y axis object will be deleted
 	if go.get_position().y < -20 then
+		-- If wall falls below 20 on the y axis object will be deleted
 		go.delete()
 	end
 	
@@ -33,11 +33,10 @@ function on_message(self, message_id, message, sender)
 
 			-- Enables new collision object (dynamic)
 			msg.post('#after_hit', 'enable')
-			
+
 			-- Sets value from 0.9 to 1 because it is falling over the other walls
 			go.set('.', 'position.z', 0.91)
 
-			
 			-- Applies a random force
 			apply_random_force()
 			-- Plays random sound
@@ -70,7 +69,7 @@ function apply_random_force()
 end
 
 function play_random_breaking_sound()
-	-- Sends a message to '/logic' to play a random breaking sound
+	-- Sends a message to logic to play a random breaking sound
 	msg.post('/logic', 'play_random_sound')
 end
 

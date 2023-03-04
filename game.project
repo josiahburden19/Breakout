@@ -4,10 +4,6 @@ main_collection = /main/main.collectionc
 [script]
 shared_state = 1
 
-[display]
-width = 960
-height = 640
-
 [android]
 input_method = HiddenInputField
 
@@ -29,9 +25,13 @@ max_instances = 4096
 max_collision_object_count = 4096
 scale = 0.01
 gravity_y = -1000.0
+debug = 0
+debug_alpha = 0.3
 
 [graphics]
 max_draw_calls = 2048
+default_texture_min_filter = nearest
+default_texture_mag_filter = nearest
 
 [library]
 include_dirs = 

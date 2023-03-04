@@ -15,16 +15,16 @@
             "scaleInEditor": 1
         },
         "maps.tmx": {
-            "scale": 1,
+            "scale": 0.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 473,
-                "y": 256
+                "x": 282,
+                "y": 288
             }
         }
     },
     "last.exportedFilePath": "C:/Users/josia/Defold Projects/Brick-Breaker/maps",
-    "last.imagePath": "C:/Users/josia/Defold Projects/Brick-Breaker/graphics/wall/wall-assets",
+    "last.imagePath": "C:/Users/josia/Defold Projects/Brick-Breaker/graphics/unbreakable_wall/unbreakable_wall-assets",
     "map.height": 24,
     "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",

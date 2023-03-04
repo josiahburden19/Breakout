@@ -15,6 +15,8 @@ function init(self)
 	self.bricks_id = {1, 3, 4}
 	-- Id of the random wall
 	self.random_id = 2
+	-- Id of unbreakable wall
+	self.unbreakable_wall_id = 5
 	
 	-- Goes through all the sprites and finds the image with id 'wall 1' then uses that value as self.tile_size
 	for i,v in ipairs(resource.get_atlas("/main/graphics.a.texturesetc").animations) do
@@ -25,7 +27,8 @@ function init(self)
 	
 	-- Calculates the position for the ball to spawn at
 	self.ball_start_pos = vmath.vector3(self.screen_centre.x, 50, 0.95)
-	
+
+	-- Loads the map
 	local json_map = sys.load_resource('/maps/map.tmj')
 	local map = json.decode(json_map)
 
@@ -34,7 +37,7 @@ function init(self)
 
 	-- Calculates how many walls can 
 	self.array_size = vmath.vector3(self.screen_size.x/self.tile_size, self.offset, 0)
-	
+	--im just testing this dead joke of a keyboard, osman was here and dead rip osman
 	-- Loops through the array spawning the wall if the map at that position has a value of 1
 	for y=0, self.array_size.y - 1, 1 do
 		for x=0, self.array_size.x, 1 do
@@ -48,20 +51,28 @@ function init(self)
 			elseif current_tile == self.random_id then
 				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y
 				spawn_wall(x, y, 2, nil, self.tile_size, self.screen_size.y)
+			elseif current_tile == self.unbreakable_wall_id then
+				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y
+				spawn_wall(x, y, 3, nil, self.tile_size, self.screen_size.y)
 			end
 		end
 	end
 	-- Pre-hashes the message_id 'play_random_sound'
 	self.play_random_sound = hash('play_random_sound')
+	-- Pre-hashes the message_id 'play_power_up_sound'
+	self.play_power_up_sound = hash('play_power_up_sound')
 	-- Pre hashes the message_id 'ball_deleted'
 	self.ball_deleted = hash('ball_deleted')
 	-- Pre-hashes the message_id 'check_ball_exists'
 	self.check_ball_exists = hash('check_ball_exists')
 	-- Pre-hashes the message_id 'spawn_ball'
 	self.spawn_ball = hash('spawn_ball')
+	-- Pre-hashes the message_id 'slow_time'
+	self.ball_size = hash('ball_size')
 	
 	-- Ball id table
 	self.ball_ids = {}
+	
 	-- Spawns the ball
 	table.insert(self.ball_ids, factory.create('/logic#ball_factory', self.ball_start_pos))
 end
@@ -79,12 +90,19 @@ function find_value(tab, val)
 end
 
 function spawn_wall(x,y, type, damage, tile_size, screen_height)
+	-- Spawns each wall, takes into account what type of wall it is
+	-- Type 1 is used for walls that have health
+	-- Type 2 is used for wall random
+	-- Type 3 is used for unbreakable wall
 	if type == 1 and damage then
 		factory.create('#wall_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height),
 		nil, {health = 4 - damage})
 	elseif type == 2 then
 		factory.create('#wall_random_factory',
+		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height))
+	elseif type == 3 then
+		factory.create('#unbreakable_wall_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height))
 	end
 end
@@ -99,16 +117,28 @@ function array_coord_to_display_coord(input_vector, tile_size, screen_height)
 	return output_vector
 end
 
+function message_all_ids(ids, message_id)
+	for index, id in ipairs(ids) do
+		-- Sends a message to all ids in a table
+		msg.post(id, message_id)
+	end
+end
+
+function remove_id(ids, id_to_remove)
+	-- Finds the index of the ball that has gone off the screen in self.ball_ids
+	local index = find_value(ids, id_to_remove)[2]
+	-- Removes the ball id from the table of balls in play
+	table.remove(ids, index)
+end
+
 function on_message(self, message_id, message, sender)
 	if message_id == self.play_random_sound then
 		-- Plays a random sound between #sound1 and #sound11
 		sound.play('/sounds#sound' .. rnd.range(1, 11))
 	end
 	if message_id == self.ball_deleted then
-		-- Finds the index of the ball that has gone off the screen in self.ball_ids
-		local index = find_value(self.ball_ids, message.ball_id)[2]
-		-- Removes the ball id from the table of balls in play
-		table.remove(self.ball_ids, index)
+		-- Removes the id from the list of ids beacuse the ball is deleted
+		remove_id(self.ball_ids, message.ball_id)
 	end
 	if message_id == self.check_ball_exists then
 		-- Calls find value which returns {true, index} if found and {false} if the value is not found in the table of ball ids hence why [1] is used
@@ -117,10 +147,17 @@ function on_message(self, message_id, message, sender)
 		msg.post(sender, 'checked_ball_exists', {did_ball_exist = did_ball_exist})
 	end
 	if message_id == self.spawn_ball then
+		-- Spawns the ball and inserts the ball into the table of ball ids
 		local ball_id = factory.create('/logic#ball_factory', message.position, nil, {initial_direction = message.initial_direction})
 		table.insert(self.ball_ids, ball_id)
-		print('Ball added')
-		pprint(self.ball_ids)
+	end
+	
+	if message_id == self.ball_size then
+		message_all_ids(self.ball_ids, 'ball_size')
+	end
+
+	if message_id == self.play_power_up_sound then
+		sound.play('/sounds#power_up')
 	end
 end
 	

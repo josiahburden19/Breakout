@@ -1,0 +1,7 @@
+function init(self)
+	go.property('offset', 0)
+end
+
+function update(self, dt)
+	go.set('.', 'position.x', go.get_position('/paddle').x + self.offset)
+end

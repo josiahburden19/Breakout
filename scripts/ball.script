@@ -20,12 +20,15 @@ function init(self)
 
 	-- Pre-hashes message_id 'angle'
 	self.angle = hash('angle')
+	-- Pre-hashes the message_id 'ball_size'
+	self.ball_size = hash('ball_size')
 end
 
 function update(self, dt)
 	-- Updates position based on dt and self.direction
-	go.set_position(go.get_position() + self.direction * dt)
-	
+	go.set_position(go.get_position() + (self.direction) * dt)
+
+	-- If the ball goes below the screen
 	if go.get_position().y < -20 then
 		-- Tells the logic script that the ball has been deleted so it can be removed from the ball_ids table
 		msg.post('/logic', 'ball_deleted', {ball_id = go.get_id()})
@@ -52,10 +55,13 @@ function on_message(self, message_id, message, sender)
 	if message_id == self.angle then
 		msg.post(sender, 'direction', {direction = self.direction})
 	end
+	if message_id == self.ball_size then
+		go.set_scale(vmath.vector3(2, 2, 2))
+	end
 end
 
-function increase_speed(vector3, speed)
-	vector3 = vector3 * speed
+function mult_speed(vector3, mult)
+	vector3 = vector3 * mult
 	return vector3
 end
 
