@@ -11,12 +11,14 @@ function init(self)
 	-- Sets game object to the start position
 	go.set_position(self.start_pos)
 
-	self.num_of_paddle_extentions = 0
+	self.num_of_paddle_extensions = 0
 	
 	-- Pre-hash message_id 'add_paddle'
 	self.add_paddle = hash('add_paddle')
 	-- Pre-hash message_id 'remove_paddle'
 	self.remove_paddle = hash('remove_paddle')
+	-- Pre-hash message_id 'get_num_paddle_extentions'
+	self.get_num_paddle_extensions = hash('get_num_paddle_extensions')
 
 	self.spawned_paddles_stack = {}
 	self.delete_paddle_counter = 0
@@ -24,10 +26,10 @@ function init(self)
 end
 
 function update(self, dt)
-	if self.num_of_paddle_extentions ~= 0 then
+	if self.num_of_paddle_extensions ~= 0 then
 		self.delete_paddle_counter = self.delete_paddle_counter + dt
 		if self.delete_paddle_counter >= 10 then
-			self.num_of_paddle_extentions = self.num_of_paddle_extentions - 1
+			self.num_of_paddle_extensions = self.num_of_paddle_extensions - 1
 			local id_of_paddle_to_delete = table.remove(self.spawned_paddles_stack)
 			go.delete(id_of_paddle_to_delete)
 			self.delete_paddle_counter = 0
@@ -37,12 +39,12 @@ function update(self, dt)
 	end
 end
 
-function cal_extension(num_of_paddle_extentions)
-	if num_of_paddle_extentions % 2 == 1 then
-		local x_offset = (16 + (32 * math.floor(num_of_paddle_extentions/2 + 0.5)))
+function cal_extension(num_of_paddle_extensions)
+	if num_of_paddle_extensions % 2 == 1 then
+		local x_offset = (16 + (32 * math.floor(num_of_paddle_extensions/2 + 0.5)))
 		return x_offset
 	else
-		local x_offset = (-16 - (32 * math.floor(num_of_paddle_extentions/2 + 0.5)))
+		local x_offset = (-16 - (32 * math.floor(num_of_paddle_extensions/2 + 0.5)))
 		return x_offset
 	end
 end
@@ -55,10 +57,13 @@ function on_input(self, action_id, action)
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == self.add_paddle and self.num_of_paddle_extentions < 30 then
-		self.num_of_paddle_extentions = self.num_of_paddle_extentions + 1
-		local x_offset = cal_extension(self.num_of_paddle_extentions)
+	if message_id == self.add_paddle and self.num_of_paddle_extensions < 30 then
+		self.num_of_paddle_extensions = self.num_of_paddle_extensions + 1
+		local x_offset = cal_extension(self.num_of_paddle_extensions)
 		local paddle_extension_id = factory.create('/logic#paddle_extension', vmath.vector3(0, self.y_pos, 0), nil, {offset = x_offset})
 		table.insert(self.spawned_paddles_stack, paddle_extension_id)
+	end
+	if message_id == self.get_num_paddle_extensions then
+		msg.post(sender, 'num_paddle_extensions', {self.num_of_paddle_extensions})
 	end
 end		

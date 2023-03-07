@@ -6,6 +6,10 @@ function init(self)
 	
 	-- Creates property 'health'
 	go.property('health', 3)
+	-- Creates a property to detect whether sound should be made upon brick breaking
+	go.property('bricks_sfx', true)
+	-- Creates a property to detect whether bricks should have falling physics after they are broken
+	go.property('falling_bricks', true)
 
 	sprite.play_flipbook('#sprite', 'wall ' .. (4 - self.health))
 
@@ -31,8 +35,12 @@ function on_message(self, message_id, message, sender)
 			-- Disables old collision object (static)
 			msg.post('#before_hit', 'disable')
 
-			-- Enables new collision object (dynamic)
-			msg.post('#after_hit', 'enable')
+			if self.falling_bricks then
+				-- Enables new collision object (dynamic)
+				msg.post('#after_hit', 'enable')
+			else
+				go.delete()
+			end
 
 			-- Sets value from 0.9 to 1 because it is falling over the other walls
 			go.set('.', 'position.z', 0.91)
@@ -40,11 +48,11 @@ function on_message(self, message_id, message, sender)
 			-- Applies a random force
 			apply_random_force()
 			-- Plays random sound
-			play_random_breaking_sound()
+			play_random_breaking_sound(self)
 		elseif message.group == self.ball then
 			-- Lowers health by 1
 			self.health = self.health - 1
-			play_random_breaking_sound()
+			play_random_breaking_sound(self)
 			-- Updates the sprite to the correct image which shows damage
 			-- (4 - self.health) is used beacuse the strongest wall has a value of 1 and self.health starts at 3 so 4-3 = 1
 			sprite.play_flipbook('#sprite', 'wall ' .. (4 - self.health))
@@ -68,9 +76,11 @@ function apply_random_force()
 	})
 end
 
-function play_random_breaking_sound()
-	-- Sends a message to logic to play a random breaking sound
-	msg.post('/logic', 'play_random_sound')
+function play_random_breaking_sound(self)
+	if self.bricks_sfx then
+		-- Sends a message to logic to play a random breaking sound
+		msg.post('/logic', 'play_random_sound')
+	end
 end
 
 function rand_num(min, max, mlt)

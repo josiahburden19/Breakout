@@ -14,6 +14,10 @@ images {
   image: "/graphics/slider/slider-assets/slider_point.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
+images {
+  image: "/graphics/level/level-assets/level.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
 animations {
   id: "wall 1"
   images {
@@ -99,6 +103,82 @@ animations {
   }
   playback: PLAYBACK_NONE
   fps: 1
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "toggle_forward"
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00000.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00001.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00002.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00003.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00004.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 24
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "toggle_start"
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00000.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 24
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "toggle_end"
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00004.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_NONE
+  fps: 24
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "toggle_backward"
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00000.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00001.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00002.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00003.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  images {
+    image: "/graphics/toggle/toggle/Comp 1_00004.png"
+    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+  }
+  playback: PLAYBACK_ONCE_BACKWARD
+  fps: 24
   flip_horizontal: 0
   flip_vertical: 0
 }

@@ -25,6 +25,10 @@ function init(self)
 
 	-- Property which changes how fast the wall falls after being hit
 	go.property('speed', 150)
+	-- Creates a property to detect whether sound should be made upon brick breaking
+	go.property('bricks_sfx', true)
+	-- Creates a property to detect whether sound should be made upon power up being collected
+	go.property('power_up_sfx', true)
 end
 
 function update(self, dt)
@@ -41,11 +45,10 @@ end
 
 function on_message(self, message_id, message, sender)
 	-- If collided with ball
-	if self.collision_response and message.group == self.ball then
+	if message_id == self.collision_response and message.group == self.ball then
 		-- Disable collision object
 		msg.post('#before_hit', 'disable')
-
-		play_random_breaking_sound()
+		play_random_breaking_sound(self)
 		
 		-- Enable the collision object for after its hit
 		msg.post('#after_hit', 'enable')
@@ -63,9 +66,8 @@ function on_message(self, message_id, message, sender)
 
 		sprite.play_flipbook('#sprite', self.sprite_powerups[self.power_up])
 		
-	elseif self.hit and not self.spawned and self.trigger_response then
-		-- ..and self.hit is true then delete
-		self.spawned = true
+	elseif self.hit and message_id == self.trigger_response then
+		play_power_up_sound(self)
 		if self.power_up == 1 then
 			-- If the random power up is two_balls
 			-- Sends a message to logic which contains the table of the balls that are currently in play to check whether that id of the ball that hit has gone off the screen
@@ -75,46 +77,43 @@ function on_message(self, message_id, message, sender)
 			-- If the power up is to slow time send a message to logic to slow time
 			msg.post('/logic', 'ball_size')
 			-- Break the brick
-			destroy_power_up()
+			go.delete()
 		end
 		if self.power_up == 2 then
 			-- If the power up is to extent paddle send a message to paddle to extend paddle
 			msg.post('/paddle', 'add_paddle')
 			-- Break the brick
-			destroy_power_up()
+			go.delete()
 		end
 	end
 	if self.power_up == 1 then
 		if message_id == self.checked_ball_exists and message.did_ball_exist then
 			-- If the message the message recieved from logic tells us the ball exists then send a message to the ball to get its angle
 			msg.post(self.ball_id, 'angle')
+		elseif message.did_ball_exist == false then
+			go.delete()
 		end
 		if message_id == self.direction then
 			-- Once the ball sends its self.direction this info can be used to tell the logic script to spawn a new ball at the coords of the ball which has similar (this is only similar beacuse some variation is added in the ball.script init function)
 			-- The reason why factory.create isnt used here is beacuse we want the logic script to spawn the ball beacuse then it can add the ball's id to the table of ids
 			msg.post('/logic', 'spawn_ball', {position = go.get_position(self.ball_id), initial_direction = message.direction})
-			-- If hits paddle tell logic that this isn't falling random wall
-			msg.post('/logic', 'remove_falling_random_wall', {random_wall_id = go.get_id()})
 			-- Break the brick
-			destroy_power_up()
+			go.delete()
 		end
 	end
 end
 
-function destroy_power_up()
-	-- Play breaking sound
-	play_power_up_sound()
-	-- Delete wall
-	go.delete()
+function play_random_breaking_sound(self)
+	if self.bricks_sfx then
+		-- Sends a message to logic to play a random breaking sound
+		msg.post('/logic', 'play_random_sound')
+	end
 end
 
-function play_random_breaking_sound()
-	-- Sends a message to logic to play a random breaking sound
-	msg.post('/logic', 'play_random_sound')
-end
-
-function play_power_up_sound()
-	-- Send a message to logic to play power up sound
-	msg.post('/logic', 'play_power_up_sound')
+function play_power_up_sound(self)
+	if self.power_up_sfx then
+		-- Sends a message to logic to play the power up sound
+		msg.post('/logic', 'play_power_up_sound')
+	end
 end
 		

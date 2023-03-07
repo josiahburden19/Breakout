@@ -1,12 +1,6 @@
 function init(self)
-	-- Initializes self.screen_centre with coordinates 0,0,0
-	self.screen_centre = vmath.vector3()
-	-- Sets the x and y component of the self.screen_centre to half the screen width and height
-	self.screen_centre.x = sys.get_config_int("display.width")/2
-	self.screen_centre.y = sys.get_config_int("display.height")/2
-	
 	-- Stores the node ids and the proxy of the collection to load when clcicked
-	self.click_nodes = {{'play', '#game_proxy'}, {'options', '#settings_proxy'}}
+	self.click_nodes = {{'play', '#levels_proxy'}, {'options', '#settings_proxy'}}
 	-- Lets the update script know whether the node at the same index in self.click_nodes is being animated
 	self.animating_nodes = {}
 
@@ -18,12 +12,6 @@ function init(self)
 		-- Adds the original scale to the click nodes data so nodes can be different sizes
 		self.click_nodes[index][3] = gui.get_scale(self.click_nodes[index][1])
 	end
-
-	-- Gets the node with the id 'container' and stores it in a variable, self.container_node
-	self.container_node = gui.get_node('container')
-
-	-- Sets the container node to the centre of the screen
-	gui.set_position(self.container_node, self.screen_centre)
 
 	-- Creates an vector with coordinates 0, 0, 0 to store mouse_position
 	self.mouse_pos = vmath.vector3()

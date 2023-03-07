@@ -47,7 +47,6 @@ embedded_components {
   "mask: \"boundaries\"\n"
   "mask: \"wall_health_1\"\n"
   "mask: \"paddle_extension\"\n"
-  "mask: \"ball\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"
   "    shape_type: TYPE_SPHERE\n"

@@ -17,6 +17,10 @@ function init(self)
 	self.paddle = hash('paddle')
 	-- Pre-hashes collision group 'wall_health_1'
 	self.wall_health_1 = hash('wall_health_1')
+	-- Pre-hashes collision group 'paddle_extension'
+	self.paddle_extension = hash('paddle_extension')
+	-- Pre-hashes message_id 'num_paddle_extensions'
+	self.num_paddle_extensions = hash('num_paddle_extensions')
 
 	-- Pre-hashes message_id 'angle'
 	self.angle = hash('angle')
@@ -43,11 +47,15 @@ function on_message(self, message_id, message, sender)
 		-- If going in a opposing direction to collision normal
 		if vmath.dot(self.direction, message.normal) < 0 then
 			-- Reflects the direction vector
-			if message.group == self.paddle then
-				-- Tells the function that is was hit by paddle
-				self.direction = reflect_vector3(self.direction, message.normal, true)
+			if message.group == self.paddle or message.group == self.paddle_extension then
+				if message.normal == vmath.vector3(0, 1, 0) then
+					msg.post('/paddle', 'get_num_paddle_extensions')
+				else
+					-- Tells the function that is was hit by paddle or paddle extension on the side
+					self.direction = reflect_vector3(self.direction, message.normal, true, 0)
+				end
 			elseif message.group ~= self.wall_health_1 then
-				-- Tells the function that is wasn't hit by paddle
+				-- Tells the function that is wasn't hit by paddle or paddle extension
 				self.direction = reflect_vector3(self.direction, message.normal, false)
 			end
 		end
@@ -58,6 +66,10 @@ function on_message(self, message_id, message, sender)
 	if message_id == self.ball_size then
 		go.set_scale(vmath.vector3(2, 2, 2))
 	end
+	if message_id == self.num_paddle_extensions then
+		-- Tells the function that is was hit by paddle or paddle extension
+		self.direction = reflect_vector3(self.direction, vmath.vector3(0, 1, 0), true, message[1])
+	end
 end
 
 function mult_speed(vector3, mult)
@@ -65,16 +77,16 @@ function mult_speed(vector3, mult)
 	return vector3
 end
 
-function reflect_vector3(vector3, normal, is_paddle)
+function reflect_vector3(vector3, normal, is_paddle, num_of_paddle_extensions)
 	-- Uses equation to exactly reflect direction given the normal
 	-- R = V - 2(V . N)N
 
 	-- If hits it hits the paddle then reflection will be skewed depending on the how far from the centre of the paddle it was hit.
-	if is_paddle and normal == vmath.vector3(0, 1, 0) then
+	if is_paddle then
 		-- Calculates exact reflection
 		local reflect_vector = normal * vmath.length(vector3)
 		-- Gets relative position of paddle to ball
-		local relative_position = go.get_position().x - go.get_position('/paddle').x
+		local relative_position = (go.get_position().x - go.get_position('/paddle').x) / (num_of_paddle_extensions + 1)
 		-- Rotates the reflected vector based on where it is hit on the paddle and returns it
 		return vmath.rotate(vmath.quat_rotation_z(math.rad(-relative_position) * 2), reflect_vector)
 	else

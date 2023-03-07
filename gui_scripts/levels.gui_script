@@ -1,0 +1,101 @@
+function init(self)
+	-- Get nodes
+	for i,v in ipairs({'level', 'container'}) do
+		self[v] = gui.get_node(v)
+	end
+
+	self.scale = gui.get_scale(self.level)
+	
+	self.files = files_in_dir('maps')
+	
+	self.levels_per_row = 4
+	self.spread = vmath.vector3(220, 180, 0)
+	
+	self.lowest = gui.get_position(self.container).y
+	self.highest = self.lowest + math.ceil(#self.files/self.levels_per_row) * self.spread.y - 480
+	
+	
+	self.clickable_nodes, self.text_nodes = dupe_gui(self.level, 4, self.spread, self.files)
+	
+	-- Pre-hash inputs
+	for i,v in ipairs({'wheel_up', 'wheel_down', 'touch'}) do
+		self[v] = hash(v)
+	end
+
+	self.mouse_pos = vmath.vector3()
+	-- Lets the update script know whether the node at the same index in self.clickable_nodes is being animated
+	self.animating_nodes = {}
+	
+	msg.post('.', 'acquire_input_focus')
+end
+
+function files_in_dir(dir)
+	local files = {}
+	local tmj_ext = '.tmj'
+	for file in io.popen('dir ' .. dir .. ' /b'):lines() do
+		local ext = string.lower(string.sub(file, -4))
+		if ext == tmj_ext then
+			table.insert(files, string.sub(file, 1, -5))
+		end
+	end
+	return files
+end
+
+function dupe_gui(node, width, spread_vector3, files)
+	local start_pos = gui.get_position(node)
+	local gui_id = gui.get_id(node)
+	local list_of_nodes = {}
+	local list_of_text_nodes = {}
+	for y = 0, #files/width, 1 do
+		local y_pos = start_pos.y - y * spread_vector3.y
+		for x = 0, math.min(#files - (y * width), width) - 1, 1 do
+			local x_pos = - (width - 1) * spread_vector3.x * 0.5 + x * spread_vector3.x
+			local new_gui_tree = gui.clone_tree(node)
+			gui.set_position(new_gui_tree[gui_id], vmath.vector3(x_pos, y_pos, 0))
+			gui.set_enabled(new_gui_tree[gui_id], true)
+			gui.set_text(new_gui_tree.text1, files[(y * width) + x + 1])
+			
+			table.insert(list_of_nodes, new_gui_tree[gui_id])
+			table.insert(list_of_text_nodes, new_gui_tree.text1)
+		end
+	end
+	return list_of_nodes, list_of_text_nodes
+end
+
+function update(self, dt)
+	for index, node in ipairs(self.clickable_nodes) do
+		-- Checks to see if node is clickable and the current node is not being animated
+		if gui.pick_node(node, self.mouse_pos.x, self.mouse_pos.y) and not self.animating_nodes[index] then
+			self.animating_nodes[index] = true
+			gui.animate(node, 'scale', self.scale*1.2, go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
+
+			-- If the mouse is not over the node and the current node is not being animated then animate to original scale
+		elseif not self.animating_nodes[index] then
+			self.animating_nodes[index] = true
+			gui.animate(node, 'scale', self.scale, go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
+		end
+	end
+end
+function detect_click(list_of_nodes, action)
+	for index, node in ipairs(list_of_nodes) do
+		if gui.pick_node(node, action.x, action.y) then
+			return index
+		end
+	end
+	return nil
+end
+
+function on_input(self, action_id, action)
+	if action_id == self.wheel_up and self.lowest < gui.get_position(self.container).y then
+		gui.set_position(self.container, gui.get_position(self.container) - vmath.vector3(0, 20, 0))
+	elseif action_id == self.wheel_down and self.highest > gui.get_position(self.container).y then
+		gui.set_position(self.container, gui.get_position(self.container) + vmath.vector3(0, 20, 0))
+	end
+	-- Updates the self.mouse_pos variable with the current coordinates of the mouse
+	self.mouse_pos = vmath.vector3(action.x, action.y, 0)
+	local index = detect_click(self.clickable_nodes, action)
+	if action_id == self.touch and index ~= nil and action.pressed then
+		print(gui.get_text(self.text_nodes[index]))
+	end
+end
+		

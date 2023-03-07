@@ -1,7 +1,15 @@
-script: "/gui_scripts/title.gui_script"
+script: "/gui_scripts/levels.gui_script"
 fonts {
   name: "breakout"
   font: "/fonts/breakout.font"
+}
+fonts {
+  name: "levels"
+  font: "/fonts/levels.font"
+}
+textures {
+  name: "graphics"
+  texture: "/main/graphics.atlas"
 }
 background_color {
   x: 0.0
@@ -12,7 +20,7 @@ background_color {
 nodes {
   position {
     x: 480.0
-    y: 320.0
+    y: 500.0
     z: 0.0
     w: 1.0
   }
@@ -69,7 +77,7 @@ nodes {
 nodes {
   position {
     x: 0.0
-    y: 176.0
+    y: 44.0
     z: 0.0
     w: 1.0
   }
@@ -99,76 +107,10 @@ nodes {
   }
   type: TYPE_TEXT
   blend_mode: BLEND_MODE_ALPHA
-  text: "Breakout"
-  font: "breakout"
-  id: "breakout"
-  xanchor: XANCHOR_NONE
-  yanchor: YANCHOR_NONE
-  pivot: PIVOT_CENTER
-  outline {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-    w: 1.0
-  }
-  shadow {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-    w: 1.0
-  }
-  adjust_mode: ADJUST_MODE_FIT
-  line_break: false
-  parent: "container"
-  layer: ""
-  inherit_alpha: true
-  alpha: 1.0
-  outline_alpha: 1.0
-  shadow_alpha: 1.0
-  template_node_child: false
-  text_leading: 1.0
-  text_tracking: 0.0
-  custom_type: 0
-  enabled: true
-  visible: true
-}
-nodes {
-  position {
-    x: 0.0
-    y: -1.0
-    z: 0.0
-    w: 1.0
-  }
-  rotation {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    w: 1.0
-  }
-  scale {
-    x: 1.447
-    y: 1.447
-    z: 2.067
-    w: 1.0
-  }
-  size {
-    x: 200.0
-    y: 100.0
-    z: 0.0
-    w: 1.0
-  }
-  color {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-    w: 1.0
-  }
-  type: TYPE_TEXT
-  blend_mode: BLEND_MODE_ALPHA
-  text: "Play\n"
+  text: "Levels\n"
   ""
   font: "breakout"
-  id: "play"
+  id: "text"
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
   pivot: PIVOT_CENTER
@@ -202,7 +144,7 @@ nodes {
 nodes {
   position {
     x: 0.0
-    y: -129.0
+    y: -90.0
     z: 0.0
     w: 1.0
   }
@@ -213,8 +155,8 @@ nodes {
     w: 1.0
   }
   scale {
-    x: 0.7
-    y: 0.7
+    x: 1.0
+    y: 1.0
     z: 1.0
     w: 1.0
   }
@@ -230,11 +172,69 @@ nodes {
     z: 1.0
     w: 1.0
   }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+  texture: "graphics/level"
+  id: "level"
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  pivot: PIVOT_CENTER
+  adjust_mode: ADJUST_MODE_FIT
+  parent: "container"
+  layer: ""
+  inherit_alpha: true
+  slice9 {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 0.0
+  }
+  clipping_mode: CLIPPING_MODE_NONE
+  clipping_visible: true
+  clipping_inverted: false
+  alpha: 1.0
+  template_node_child: false
+  size_mode: SIZE_MODE_AUTO
+  custom_type: 0
+  enabled: false
+  visible: true
+}
+nodes {
+  position {
+    x: 0.0
+    y: 23.0
+    z: 0.0
+    w: 1.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+    z: 1.0
+    w: 1.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+    z: 0.0
+    w: 1.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
   type: TYPE_TEXT
   blend_mode: BLEND_MODE_ALPHA
-  text: "Options"
-  font: "breakout"
-  id: "options"
+  text: "Level"
+  font: "levels"
+  id: "text1"
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
   pivot: PIVOT_CENTER
@@ -252,7 +252,7 @@ nodes {
   }
   adjust_mode: ADJUST_MODE_FIT
   line_break: false
-  parent: "container"
+  parent: "level"
   layer: ""
   inherit_alpha: true
   alpha: 1.0

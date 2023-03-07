@@ -1,4 +1,21 @@
 function init(self)
+	-- Stores the location that the config file is stored at
+	self.file_location = 'config/config'
+	-- If the config file exists then load it
+	if file_exists(self.file_location) then
+		self.config = sys.load(self.file_location)
+		sound.set_group_gain(hash('master'), self.config.volume/100)
+	else
+		local default_config = {
+			volume = 100,
+			bricks_sfx = true,
+			power_up_sfx = false,
+			falling_bricks = true
+		}
+		sys.save(self.file_location, default_config)
+		self.config = sys.load(self.file_location)
+	end
+	
 	-- Initializes self.screen_centre with coordinates 0,0,0
 	self.screen_centre = vmath.vector3()
 	-- Sets the x and y component of the self.screen_centre to half the screen width and height
@@ -46,14 +63,14 @@ function init(self)
 			-- Checks to see if current tile is a brick
 			local is_brick = find_value(self.bricks_id, current_tile)
 			if is_brick[1] then
-				-- Calls spawn spawn_wall gives x, y and type of wall, how damaged the tile is, self.tile_size and self.screen_size.y
-				spawn_wall(x, y, 1, is_brick[2], self.tile_size, self.screen_size.y)
+				-- Calls spawn spawn_wall gives x, y and type of wall, how damaged the tile is, self.tile_size and self.screen_size.y and the config file
+				spawn_wall(x, y, 1, is_brick[2], self.tile_size, self.screen_size.y, self.config)
 			elseif current_tile == self.random_id then
-				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y
-				spawn_wall(x, y, 2, nil, self.tile_size, self.screen_size.y)
+				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y and the config file
+				spawn_wall(x, y, 2, nil, self.tile_size, self.screen_size.y, self.config)
 			elseif current_tile == self.unbreakable_wall_id then
-				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y
-				spawn_wall(x, y, 3, nil, self.tile_size, self.screen_size.y)
+				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y and the config file
+				spawn_wall(x, y, 3, nil, self.tile_size, self.screen_size.y, self.config)
 			end
 		end
 	end
@@ -89,7 +106,7 @@ function find_value(tab, val)
 	return {false}
 end
 
-function spawn_wall(x,y, type, damage, tile_size, screen_height)
+function spawn_wall(x,y, type, damage, tile_size, screen_height, config)
 	-- Spawns each wall, takes into account what type of wall it is
 	-- Type 1 is used for walls that have health
 	-- Type 2 is used for wall random
@@ -97,10 +114,11 @@ function spawn_wall(x,y, type, damage, tile_size, screen_height)
 	if type == 1 and damage then
 		factory.create('#wall_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height),
-		nil, {health = 4 - damage})
+		nil, {health = 4 - damage, bricks_sfx=config.bricks_sfx, falling_bricks = config.falling_bricks})
 	elseif type == 2 then
 		factory.create('#wall_random_factory',
-		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height))
+		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height),
+		nil, {bricks_sfx=config.bricks_sfx, power_up_sfx = config.power_up_sfx})
 	elseif type == 3 then
 		factory.create('#unbreakable_wall_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height))
@@ -157,7 +175,19 @@ function on_message(self, message_id, message, sender)
 	end
 
 	if message_id == self.play_power_up_sound then
+		sound.stop("/sounds#power_up")
 		sound.play('/sounds#power_up')
+	end
+end
+
+function file_exists(name)
+	-- Checks if the file exists by opening it and checks to see if it is equal to nil
+	local file=io.open(name,"r")
+	if file~=nil then
+		io.close(file)
+		return true
+	else
+		return false
 	end
 end
 	
