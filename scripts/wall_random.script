@@ -36,6 +36,13 @@ function update(self, dt)
 	if self.hit then
 		-- Ever update after the ball has been hit the wall will move downwards
 		go.set('.', 'position.y', go.get_position().y - self.speed * dt)
+		if go.get('/logic#logic', 'pause') == true then
+			if self.speed ~= 0 then
+				self.speed = 0
+			end
+		elseif self.speed ~= 150 then
+			self.speed = 150
+		end
 	end
 	if go.get_position().y < -20 then
 		-- If the wall goes below the screen then delete it
@@ -49,6 +56,7 @@ function on_message(self, message_id, message, sender)
 		-- Disable collision object
 		msg.post('#before_hit', 'disable')
 		play_random_breaking_sound(self)
+		msg.post('/logic', 'brick_destroyed', {brick_id = go.get_id()})
 		
 		-- Enable the collision object for after its hit
 		msg.post('#after_hit', 'enable')
@@ -74,10 +82,9 @@ function on_message(self, message_id, message, sender)
 			msg.post('/logic', 'check_ball_exists', {ball_id = self.ball_id})
 		end
 		if self.power_up == 3 then
-			-- If the power up is to slow time send a message to logic to slow time
-			msg.post('/logic', 'ball_size')
-			-- Break the brick
-			go.delete()
+			-- If the random power up is scale ball
+			-- Sends a message to logic which contains the table of the balls that are currently in play to check whether that id of the ball that hit has gone off the screen
+			msg.post('/logic', 'check_ball_exists', {ball_id = self.ball_id})
 		end
 		if self.power_up == 2 then
 			-- If the power up is to extent paddle send a message to paddle to extend paddle
@@ -98,6 +105,12 @@ function on_message(self, message_id, message, sender)
 			-- The reason why factory.create isnt used here is beacuse we want the logic script to spawn the ball beacuse then it can add the ball's id to the table of ids
 			msg.post('/logic', 'spawn_ball', {position = go.get_position(self.ball_id), initial_direction = message.direction})
 			-- Break the brick
+			go.delete()
+		end
+	elseif self.power_up == 3 then
+		if message_id == self.checked_ball_exists and message.did_ball_exist then
+			-- If the message the message recieved from logic tells us the ball exists then send a message to the ball to scale it
+			msg.post(self.ball_id, 'ball_size')
 			go.delete()
 		end
 	end

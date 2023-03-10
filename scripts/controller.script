@@ -16,19 +16,33 @@ function on_message(self, message_id, message, sender)
 		unload_collection(self.current_collection)
 		-- And load new collection
 		load_collection(message.collection_to_load)
+		if sender_to_string(sender) == 'levels:/gui#levels' then
+			self.map_to_load = message.map_name
+		end
 	end
 	
 	-- Checks to see if the collection was successfully loaded
 	if message_id == hash('proxy_loaded') then
 		-- Enables the collection that sent the message
 		enable_collection(sender)
+		if sender_to_string(sender) == 'main:/main#game_proxy' then
+			send_map(self.map_to_load)
+		end
 		
 		-- Updates self.current_collection to the new collection that is loaded 
 		self.current_collection = sender
 	end
 end
 
-function load_collection(collection)
+function sender_to_string(sender)
+	return string.sub(tostring(sender), 7, -2)
+end
+
+function send_map(map_name)
+	msg.post('game:/logic', 'start_game', {map_name = map_name})
+end
+
+function load_collection(collection, map)
 	msg.post(collection, 'load')
 end
 

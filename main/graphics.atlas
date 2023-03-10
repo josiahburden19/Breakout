@@ -18,6 +18,10 @@ images {
   image: "/graphics/level/level-assets/level.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
+images {
+  image: "/graphics/win/win-assets/win.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
 animations {
   id: "wall 1"
   images {

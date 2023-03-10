@@ -1,4 +1,8 @@
-function init(self)
+function start(self, map_name)
+	self.game_end = false
+	go.property('pause', false)
+	
+	msg.post('/gui', 'disable')
 	-- Stores the location that the config file is stored at
 	self.file_location = 'config/config'
 	-- If the config file exists then load it
@@ -34,6 +38,9 @@ function init(self)
 	self.random_id = 2
 	-- Id of unbreakable wall
 	self.unbreakable_wall_id = 5
+
+	-- Breakable Breakable id table
+	self.brick_ids = {}
 	
 	-- Goes through all the sprites and finds the image with id 'wall 1' then uses that value as self.tile_size
 	for i,v in ipairs(resource.get_atlas("/main/graphics.a.texturesetc").animations) do
@@ -46,7 +53,7 @@ function init(self)
 	self.ball_start_pos = vmath.vector3(self.screen_centre.x, 50, 0.95)
 
 	-- Loads the map
-	local json_map = sys.load_resource('/maps/map.tmj')
+	local json_map = sys.load_resource('/maps/'..map_name..'.tmj')
 	local map = json.decode(json_map)
 
 	-- self.offset stores how many blocks high the map is
@@ -57,17 +64,17 @@ function init(self)
 	--im just testing this dead joke of a keyboard, osman was here and dead rip osman
 	-- Loops through the array spawning the wall if the map at that position has a value of 1
 	for y=0, self.array_size.y - 1, 1 do
-		for x=0, self.array_size.x, 1 do
+		for x=1, self.array_size.x, 1 do
 			-- Gets the value of the current tile and assigns it to a var
 			local current_tile = map.layers[1].data[y*self.array_size.x + x]
 			-- Checks to see if current tile is a brick
 			local is_brick = find_value(self.bricks_id, current_tile)
 			if is_brick[1] then
 				-- Calls spawn spawn_wall gives x, y and type of wall, how damaged the tile is, self.tile_size and self.screen_size.y and the config file
-				spawn_wall(x, y, 1, is_brick[2], self.tile_size, self.screen_size.y, self.config)
+				table.insert(self.brick_ids, spawn_wall(x, y, 1, is_brick[2], self.tile_size, self.screen_size.y, self.config))
 			elseif current_tile == self.random_id then
 				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y and the config file
-				spawn_wall(x, y, 2, nil, self.tile_size, self.screen_size.y, self.config)
+				table.insert(self.brick_ids, spawn_wall(x, y, 2, nil, self.tile_size, self.screen_size.y, self.config))
 			elseif current_tile == self.unbreakable_wall_id then
 				-- Calls spawn spawn_wall gives x, y and type of wall, self.tile_size and self.screen_size.y and the config file
 				spawn_wall(x, y, 3, nil, self.tile_size, self.screen_size.y, self.config)
@@ -84,14 +91,18 @@ function init(self)
 	self.check_ball_exists = hash('check_ball_exists')
 	-- Pre-hashes the message_id 'spawn_ball'
 	self.spawn_ball = hash('spawn_ball')
-	-- Pre-hashes the message_id 'slow_time'
-	self.ball_size = hash('ball_size')
+	-- Pre-hashes the message_id 'brick_destroyed'
+	self.brick_destroyed = hash('brick_destroyed')
+
+	-- Pre-hashes the input 'esc'
+	self.esc = hash('esc')
 	
 	-- Ball id table
 	self.ball_ids = {}
 	
 	-- Spawns the ball
 	table.insert(self.ball_ids, factory.create('/logic#ball_factory', self.ball_start_pos))
+	msg.post('.', 'acquire_input_focus')
 end
 
 function find_value(tab, val)
@@ -112,15 +123,15 @@ function spawn_wall(x,y, type, damage, tile_size, screen_height, config)
 	-- Type 2 is used for wall random
 	-- Type 3 is used for unbreakable wall
 	if type == 1 and damage then
-		factory.create('#wall_factory',
+		return factory.create('#wall_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height),
 		nil, {health = 4 - damage, bricks_sfx=config.bricks_sfx, falling_bricks = config.falling_bricks})
 	elseif type == 2 then
-		factory.create('#wall_random_factory',
+		return factory.create('#wall_random_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height),
 		nil, {bricks_sfx=config.bricks_sfx, power_up_sfx = config.power_up_sfx})
 	elseif type == 3 then
-		factory.create('#unbreakable_wall_factory',
+		return factory.create('#unbreakable_wall_factory',
 		array_coord_to_display_coord(vmath.vector3(x, y, 0), tile_size, screen_height))
 	end
 end
@@ -144,12 +155,25 @@ end
 
 function remove_id(ids, id_to_remove)
 	-- Finds the index of the ball that has gone off the screen in self.ball_ids
-	local index = find_value(ids, id_to_remove)[2]
+	local index_data = find_value(ids, id_to_remove)
 	-- Removes the ball id from the table of balls in play
-	table.remove(ids, index)
+	if not index_data[1] == false then
+		table.remove(ids, index_data[2])
+	end
 end
 
 function on_message(self, message_id, message, sender)
+	if message_id == hash('start_game') then
+		start(self, message.map_name)
+	end
+	if message_id == self.brick_destroyed then
+		remove_id(self.brick_ids, message.brick_id)
+		if #self.brick_ids == 0 then
+			msg.post('/gui', 'enable')
+			msg.post('/gui', 'text', {text = 'You Win'})
+			self.game_end = true
+		end
+	end
 	if message_id == self.play_random_sound then
 		-- Plays a random sound between #sound1 and #sound11
 		sound.play('/sounds#sound' .. rnd.range(1, 11))
@@ -157,6 +181,11 @@ function on_message(self, message_id, message, sender)
 	if message_id == self.ball_deleted then
 		-- Removes the id from the list of ids beacuse the ball is deleted
 		remove_id(self.ball_ids, message.ball_id)
+		if #self.ball_ids == 0 and not self.game_end then
+			msg.post('/gui', 'enable')
+			msg.post('/gui', 'text', {text = 'You Lose'})
+			self.game_end = true
+		end
 	end
 	if message_id == self.check_ball_exists then
 		-- Calls find value which returns {true, index} if found and {false} if the value is not found in the table of ball ids hence why [1] is used
@@ -169,14 +198,32 @@ function on_message(self, message_id, message, sender)
 		local ball_id = factory.create('/logic#ball_factory', message.position, nil, {initial_direction = message.initial_direction})
 		table.insert(self.ball_ids, ball_id)
 	end
-	
-	if message_id == self.ball_size then
-		message_all_ids(self.ball_ids, 'ball_size')
-	end
 
 	if message_id == self.play_power_up_sound then
 		sound.stop("/sounds#power_up")
 		sound.play('/sounds#power_up')
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == self.esc and not self.game_end and action.pressed then
+		if self.pause == false then
+			msg.post('/gui', 'enable')
+			msg.post('/gui', 'text', {text = 'Pause'})
+			set_property_ids(self.ball_ids, 'ball', 'speed', 0)
+			self.pause = true
+		else
+			msg.post('/gui', 'disable')
+			set_property_ids(self.ball_ids, 'ball', 'speed', 300)
+			self.pause = false
+		end
+	end
+end
+
+function set_property_ids(ids, script, property, value)
+	for _, v in ipairs(ids) do
+		local id_script = string.sub(tostring(v), 8, -2) .. '#' .. script
+		go.set(id_script, property, value)
 	end
 end
 

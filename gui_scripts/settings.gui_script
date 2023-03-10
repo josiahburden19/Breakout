@@ -18,6 +18,7 @@ function init(self)
 	self.touch = hash('touch')
 	-- Gets node of the back button
 	self.back_button = gui.get_node('back')
+	self.back_button_scale = gui.get_scale(self.back_button)
 
 	-- Checks if files exists so it can be loaded else it is created with default values
 	if file_exists(self.file_location) then
@@ -192,17 +193,20 @@ function on_input(self, action_id, action)
 	check_toggles_clicked(self, action_id, action)
 	-- Updates the toggles if clicked
 	
-	if button_pressed(self.back_button, action.x, action.y) and action.pressed and action_id == self.touch then
-		-- If the back button is pressed then exit the settings and open the title screen
-		msg.post('main:/main', 'load_collection', {collection_to_load = '#title_proxy'})
+	-- Updates the self.mouse_pos variable with the current coordinates of the mouse
+	self.mouse_pos = vmath.vector3(action.x, action.y, 0)
+	if gui.pick_node(self.back_button, action.x, action.y) then
+		if action.pressed and action_id == self.touch then
+			msg.post('main:/main', 'load_collection', {collection_to_load = '#title_proxy'})
+		elseif gui.get_scale(self.back_button) == self.back_button_scale then
+			gui.animate(self.back_button, 'scale', self.back_button_scale * 1.2, go.EASING_INCUBIC, 0.2)
+		end
 	end
 end
 
-function button_pressed(node, x, y)
-	if gui.pick_node(node, x, y) then
-		return true
-	else
-		return false
+function update(self, dt)
+	if gui.get_scale(self.back_button) == self.back_button_scale * 1.2 and not gui.pick_node(self.back_button, self.mouse_pos.x, self.mouse_pos.y) then
+		gui.animate(self.back_button, 'scale', self.back_button_scale, go.EASING_INCUBIC, 0.2)
 	end
 end
 

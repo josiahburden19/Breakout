@@ -9,7 +9,7 @@ input_method = HiddenInputField
 
 [project]
 title = Brick Breaker
-custom_resources = /maps/
+custom_resources = /maps/, /sounds/
 dependencies#0 = https://github.com/selimanac/defold-random/archive/master.zip
 
 [factory]

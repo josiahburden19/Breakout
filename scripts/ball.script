@@ -5,10 +5,10 @@ function init(self)
 	go.property('initial_direction', vmath.vector3())
 	-- Rotates the vector with length 'speed' between 10 and 170 degrees when ball
 	if self.initial_direction == vmath.vector3() then
-		self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(20, 160))), vmath.vector3(self.speed, 0, 0))
+		self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(20, 160))), vmath.vector3(1, 0, 0))
 	else
 		local angle = math.deg(math.atan2(self.initial_direction.y, self.initial_direction.x))
-		self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(angle - 20, angle + 20))), vmath.vector3(self.speed, 0, 0))
+		self.direction = vmath.rotate(vmath.quat_rotation_z(math.rad(rng(angle - 20, angle + 20))), vmath.vector3(1, 0, 0))
 	end
 	-- Pre-hashes 'contact_point_response'
 	self.contact_point_response = hash('contact_point_response')
@@ -30,7 +30,7 @@ end
 
 function update(self, dt)
 	-- Updates position based on dt and self.direction
-	go.set_position(go.get_position() + (self.direction) * dt)
+	go.set_position(go.get_position() + self.speed * self.direction * dt)
 
 	-- If the ball goes below the screen
 	if go.get_position().y < -20 then

@@ -14,11 +14,13 @@ function init(self)
 	self.lowest = gui.get_position(self.container).y
 	self.highest = self.lowest + math.ceil(#self.files/self.levels_per_row) * self.spread.y - 480
 	
-	
 	self.clickable_nodes, self.text_nodes = dupe_gui(self.level, 4, self.spread, self.files)
+
+	self.exit = gui.get_node('exit')
+	self.exit_scale = gui.get_scale(self.exit)
 	
 	-- Pre-hash inputs
-	for i,v in ipairs({'wheel_up', 'wheel_down', 'touch'}) do
+	for i,v in ipairs({'wheel_up', 'wheel_down', 'touch', 'message'}) do
 		self[v] = hash(v)
 	end
 
@@ -75,6 +77,9 @@ function update(self, dt)
 			gui.animate(node, 'scale', self.scale, go.EASING_INCUBIC, 0.2, 0, function() self.animating_nodes[index] = false end)
 		end
 	end
+	if gui.get_scale(self.exit) == self.exit_scale * 1.2 and not gui.pick_node(self.exit, self.mouse_pos.x, self.mouse_pos.y) then
+		gui.animate(self.exit, 'scale', self.exit_scale, go.EASING_INCUBIC, 0.2)
+	end
 end
 function detect_click(list_of_nodes, action)
 	for index, node in ipairs(list_of_nodes) do
@@ -95,7 +100,15 @@ function on_input(self, action_id, action)
 	self.mouse_pos = vmath.vector3(action.x, action.y, 0)
 	local index = detect_click(self.clickable_nodes, action)
 	if action_id == self.touch and index ~= nil and action.pressed then
-		print(gui.get_text(self.text_nodes[index]))
+		local map_name = gui.get_text(self.text_nodes[index])
+		msg.post('main:/main', 'load_collection', {collection_to_load = '#game_proxy', map_name = map_name})
+	end
+	if gui.pick_node(self.exit, action.x, action.y) then
+		if action.pressed and action_id == self.touch then
+			msg.post('main:/main', 'load_collection', {collection_to_load = '#title_proxy'})
+		elseif gui.get_scale(self.exit) == self.exit_scale then
+			gui.animate(self.exit, 'scale', self.exit_scale * 1.2, go.EASING_INCUBIC, 0.2)
+		end
 	end
 end
 		

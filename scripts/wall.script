@@ -34,7 +34,9 @@ function on_message(self, message_id, message, sender)
 		if message.group == self.ball and self.health == 1 then
 			-- Disables old collision object (static)
 			msg.post('#before_hit', 'disable')
-
+			
+			msg.post('/logic', 'brick_destroyed', {brick_id = go.get_id()})
+			
 			if self.falling_bricks then
 				-- Enables new collision object (dynamic)
 				msg.post('#after_hit', 'enable')

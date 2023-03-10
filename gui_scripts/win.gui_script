@@ -1,0 +1,30 @@
+function init(self)
+	self.text = hash('text')
+	self.text_node = gui.get_node('text')
+	self.exit = gui.get_node('exit')
+	self.scale = gui.get_scale(self.exit)
+	self.touch = hash('touch')
+	msg.post('.', 'acquire_input_focus')
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == self.text then
+		gui.set_text(self.text_node, message.text)
+	end
+end
+function update(self, dt)
+	if gui.get_scale(self.exit) == self.scale * 1.2 and not gui.pick_node(self.exit, self.mouse_pos.x, self.mouse_pos.y) then
+		gui.animate(self.exit, 'scale', self.scale, go.EASING_INCUBIC, 0.2)
+	end
+end
+
+function on_input(self, action_id, action)
+	self.mouse_pos = vmath.vector3(action.x, action.y, 0)
+	if gui.pick_node(self.exit, action.x, action.y) then
+		if action.pressed and action_id == self.touch then
+			msg.post('main:/main', 'load_collection', {collection_to_load = '#levels_proxy'})
+		elseif gui.get_scale(self.exit) == self.scale then
+			gui.animate(self.exit, 'scale', self.scale * 1.2, go.EASING_INCUBIC, 0.2)
+		end
+	end
+end
