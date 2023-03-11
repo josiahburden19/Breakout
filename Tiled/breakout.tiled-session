@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "maps.tmx",
+    "activeFile": "basic_map.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -14,12 +14,20 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
-        "maps.tmx": {
-            "scale": 0.5,
+        "basic_map.tmx": {
+            "scale": 1.0578645833333333,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 563,
-                "y": 284
+                "x": 480.68534291763086,
+                "y": 195.67721924080547
+            }
+        },
+        "maps.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 480,
+                "y": 191.33333333333337
             }
         }
     },
@@ -33,12 +41,14 @@
     "map.width": 60,
     "openFiles": [
         "Bricks.tsx",
-        "maps.tmx"
+        "maps.tmx",
+        "basic_map.tmx"
     ],
     "project": "breakout.tiled-project",
     "recentFiles": [
         "Bricks.tsx",
-        "maps.tmx"
+        "maps.tmx",
+        "basic_map.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.type": 1
